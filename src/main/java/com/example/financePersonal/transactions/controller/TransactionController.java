@@ -25,14 +25,14 @@ public class TransactionController {
 
     @GetMapping
     public ResponseEntity<Page<TransactionResponse>> list(
-            @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) TransactionType type,
+            @RequestParam Integer year,
             @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(transactionService.list(year, type, categoryId, q, page, size));
+        return ResponseEntity.ok(transactionService.list(year, categoryId, type, q, page, size));
     }
 
     @GetMapping("/{id}")

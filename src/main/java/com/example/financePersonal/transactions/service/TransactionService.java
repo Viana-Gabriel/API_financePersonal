@@ -62,33 +62,34 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TransactionResponse> list(Integer year,
-                                          TransactionType type,
-                                          UUID categoryId,
-                                          String q,
-                                          int page,
-                                          int size) {
-
+    public Page<TransactionResponse> list(
+            Integer year,
+            UUID categoryId,
+            TransactionType type,
+            String q,
+            int page,
+            int size
+    ) {
         UUID userId = CurrentUser.principal().userId();
 
-        String normalizedQ = (q == null) ? null : q.trim();
-        if (normalizedQ != null && normalizedQ.isEmpty()) normalizedQ = null;
-
-        LocalDate start = null;
-        LocalDate end = null;
-
-        if (year != null) {
-            start = LocalDate.of(year, 1, 1);
-            end = LocalDate.of(year, 12, 31);
+        int currentYear = java.time.Year.now().getValue();
+        if (year < 2000 || year > currentYear + 1) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "year is invalid");
         }
+
+        String normalizedQ = (q == null) ? null : q.trim();
+        if (normalizedQ != null && normalizedQ.isBlank()) normalizedQ = null;
 
         Pageable pageable = PageRequest.of(
                 Math.max(page, 0),
                 Math.min(Math.max(size, 1), 100),
-                Sort.by(Sort.Direction.DESC, "date").and(Sort.by(Sort.Direction.DESC, "createdAt"))
+                Sort.by(Sort.Direction.DESC, "date")
+                        .and(Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
-        return transactionRepository.searchPage(userId, type, categoryId, start, end, normalizedQ, pageable);
+        return transactionRepository
+                .searchPage(userId, year, type, categoryId, normalizedQ, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -149,5 +150,22 @@ public class TransactionService {
             tx.setDeletedAt(OffsetDateTime.now());
             transactionRepository.save(tx);
         }
+    }
+
+    private TransactionResponse toResponse(Transaction t) {
+        var c = t.getCategory();
+
+        return new TransactionResponse(
+                t.getId(),
+                t.getDate(),
+                t.getDescription(),
+                t.getType(),
+                t.getAmount(),
+                c != null ? c.getId() : null,
+                c != null ? c.getName() : null,
+                c != null ? c.getColorHex() : null,
+                c != null ? c.getIcon() : null,
+                t.getCreatedAt()
+        );
     }
 }
