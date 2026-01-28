@@ -1,7 +1,6 @@
 package com.example.financePersonal.categories.dto;
 
 import com.example.financePersonal.categories.model.CategoryType;
-
 import java.util.UUID;
 
 public record CategoryResponse(
@@ -10,5 +9,6 @@ public record CategoryResponse(
         CategoryType type,
         String colorHex,
         String icon,
-        boolean archived
+        boolean archived,
+        long transactionsCount
 ) {}

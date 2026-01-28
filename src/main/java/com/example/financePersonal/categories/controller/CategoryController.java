@@ -19,14 +19,18 @@ public class CategoryController {
 
     private final CategoryService categoryService;
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<List<CategoryResponse>> list(@RequestParam(required = false) CategoryType type) {
-        return ResponseEntity.ok(categoryService.list(type));
+    @GetMapping
+    public ResponseEntity<List<CategoryResponse>> list(
+            @RequestParam(required = false) CategoryType type,
+            @RequestParam(defaultValue = "false") boolean includeArchived,
+            @RequestParam(required = false) String q
+    ) {
+        return ResponseEntity.ok(categoryService.list(type, includeArchived, q));
     }
 
     @PatchMapping("/{id}")

@@ -50,14 +50,14 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryResponse> list(CategoryType type) {
+    public List<CategoryResponse> list(CategoryType type, boolean includeArchived, String q) {
         UUID userId = CurrentUser.principal().userId();
 
-        List<Category> list = (type == null)
-                ? categoryRepository.findAllByUser_IdAndArchivedFalseOrderByNameAsc(userId)
-                : categoryRepository.findAllByUser_IdAndArchivedFalseAndTypeOrderByNameAsc(userId, type);
-
-        return list.stream().map(this::toResponse).toList();
+        String normalizedQ = (q == null) ? "" : q.trim();
+        return categoryRepository.findAllWithCount(userId, type, includeArchived, normalizedQ)
+                .stream()
+                .map(row -> toResponse(row.getCategory(), row.getTransactionsCount()))
+                .toList();
     }
 
     @Transactional
@@ -102,14 +102,19 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
-    private CategoryResponse toResponse(Category c) {
+    private CategoryResponse toResponse(Category c, long count) {
         return new CategoryResponse(
                 c.getId(),
                 c.getName(),
                 c.getType(),
                 c.getColorHex(),
                 c.getIcon(),
-                c.isArchived()
+                c.isArchived(),
+                count
         );
+    }
+
+    private CategoryResponse toResponse(Category c) {
+        return toResponse(c, 0L);
     }
 }
