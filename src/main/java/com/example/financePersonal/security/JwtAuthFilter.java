@@ -53,7 +53,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception ex) {
-            SecurityContextHolder.clearContext(); // token inválido/expirado
+            SecurityContextHolder.clearContext();
         }
 
         chain.doFilter(request, response);
